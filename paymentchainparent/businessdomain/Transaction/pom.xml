@@ -7,11 +7,12 @@
         <artifactId>businessdomain</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-    <artifactId>products</artifactId>
+    <groupId>com.paymentchain</groupId>
+    <artifactId>transaction</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>products</name>
+    <name>transaction</name>
     <description>Demo project for Spring Boot</description>
-    <!--    <properties>
+<!--    <properties>
         <java.version>11</java.version>
     </properties>
     <dependencies>
