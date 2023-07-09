@@ -28,9 +28,9 @@ public class CustomerProductEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+    private Long id;
 
-    private long productId;
+    private Long productId;
 
     @Transient
     private String productName;

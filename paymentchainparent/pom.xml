@@ -1,25 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
+
     <groupId>com.paymentchain</groupId>
     <artifactId>paymentchainparent</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>paymentchainparent</name>
     <description>POM parent project for all spring boot projects</description>
-   
+    
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target> 
-        <spring-boot.version>2.3.4.RELEASE</spring-boot.version>
+        <spring-boot.version>2.6.2</spring-boot.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>      
-        <spring-boot-starter-web.version>2.3.4.RELEASE</spring-boot-starter-web.version>
-        <spring-boot-maven-plugin.version>2.3.4.RELEASE</spring-boot-maven-plugin.version>   
-        <postgres.version>42.2.16</postgres.version>    
+        <postgres.version>42.5.0</postgres.version>    
         <java-validation.version>2.0.1.Final</java-validation.version> 
         <dockerfile-maven-version>1.4.13</dockerfile-maven-version>
     </properties>
-    
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -32,37 +34,30 @@
         </dependencies>
     </dependencyManagement>  
         
-    
+
+
     <dependencies>
         <!--Gives us the ability to quickly setup and run services
         Property Defaults,Automatic Restart,Live Reload,Global Settings,Remote Applications for debug example via http--> 	
-      
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
-            <version>${spring-boot.version}</version>
-
         </dependency>
         
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
-            <version>${spring-boot.version}</version>
-
         </dependency>                
        
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
-            <version>${spring-boot.version}</version>
-
         </dependency>
         
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
-            <version>${spring-boot.version}</version>
-
         </dependency>
         
         <dependency>
@@ -74,8 +69,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-            <version>${spring-boot.version}</version>
-
             <scope>test</scope>
             <!--If want exclude junit4 and use only junit5-->
             <exclusions>
@@ -104,7 +97,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>     
-                <version>${spring-boot-maven-plugin.version}</version>      
+                <version>${spring-boot.version}</version>
                 <executions>
                     <execution>
                         <goals>
@@ -113,7 +106,7 @@
                     </execution>
                 </executions>
             </plugin>        
-            <!--<plugin>
+            <!--  <plugin>
                 <groupId>com.spotify</groupId>
                 <artifactId>dockerfile-maven-plugin</artifactId>
                 <version>${dockerfile-maven-version}</version>                               

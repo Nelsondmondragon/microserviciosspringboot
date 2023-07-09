@@ -15,7 +15,10 @@ import org.springframework.data.jpa.repository.Query;
  */
 public interface CustomerRepository extends JpaRepository<CustomerEntity, Long> {
 
-    @Query(value = "Select * From customer c where c.code = ?1", nativeQuery = true)
+    @Query("SELECT c FROM CustomerEntity c WHERE c.code = ?1")
     public CustomerEntity findByCode(String code);
+
+    @Query("SELECT c FROM CustomerEntity c WHERE c.iban = ?1")
+    public CustomerEntity findByAccount(String iban);
 
 }

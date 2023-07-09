@@ -7,8 +7,8 @@ package com.paymentchain.transaction.repository;
 
 import com.paymentchain.transaction.entities.TransactionEntity;
 import java.util.List;
-import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 /**
  *
@@ -16,5 +16,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface TransactionRepository extends JpaRepository<TransactionEntity, Long> {
 
+    @Query("SELECT t FROM TransactionEntity t WHERE t.ibanAccount = ?1")
     List<TransactionEntity> findByIbanAccount(String ibanAccount);
+
+//    List<TransactionEntity> findByReference(String reference);
 }

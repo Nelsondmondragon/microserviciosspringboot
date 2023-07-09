@@ -5,7 +5,7 @@
  */
 package com.paymentchain.transaction.entities;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -24,17 +24,17 @@ public class TransactionEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+    private Long id;
 
-    private long amount;
+    private Double amount;
 
-    private String chanel;
+    private String channel;
 
-    private Date date;
+    private LocalDateTime date;
 
     private String description;
 
-    private long fee;
+    private Double fee;
 
     private String ibanAccount;
 

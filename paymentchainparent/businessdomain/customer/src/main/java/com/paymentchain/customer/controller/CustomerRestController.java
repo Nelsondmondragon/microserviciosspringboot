@@ -5,23 +5,25 @@
  */
 package com.paymentchain.customer.controller;
 
-import com.paymentchain.customer.entities.CustomerEntity;
-import com.paymentchain.customer.repository.CustomerRepository;
-
 import com.fasterxml.jackson.databind.JsonNode;
+import com.paymentchain.customer.entities.CustomerEntity;
 import com.paymentchain.customer.entities.CustomerProductEntity;
+import com.paymentchain.customer.repository.CustomerRepository;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
-import java.util.Collections;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
+
 import org.springframework.http.MediaType;
+import java.util.Collections;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -45,61 +47,24 @@ public class CustomerRestController {
 
     @Autowired
     CustomerRepository customerRepository;
+
+//    @Value("${user.role}")
+//    private String role;
+
     private final WebClient.Builder webClientBuilder;
 
     public CustomerRestController(WebClient.Builder webClientBuilder) {
         this.webClientBuilder = webClientBuilder;
     }
 
-    TcpClient tcpClient = TcpClient
+    //webClient requires HttpClient library to work propertly       
+    TcpClient client = TcpClient
             .create()
             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
             .doOnConnected(connection -> {
                 connection.addHandlerLast(new ReadTimeoutHandler(5000, TimeUnit.MILLISECONDS));
                 connection.addHandlerLast(new WriteTimeoutHandler(5000, TimeUnit.MILLISECONDS));
             });
-
-    @GetMapping("/full")
-    public CustomerEntity get(@RequestParam String code) {
-        CustomerEntity customer = customerRepository.findByCode(code);
-        List<CustomerProductEntity> products = customer.getProducts();
-
-        System.out.println(products.size() + " ooooo");
-
-        products.forEach(dto -> {
-            String productName = getProductName(dto.getProductId());
-            dto.setProductName(productName);
-        });
-        customer.setTransactions(getTransacctions(customer.getIban()));
-        return customer;
-    }
-
-    private <T> List<T> getTransacctions(String accountIban) {
-        WebClient client = webClientBuilder.clientConnector(new ReactorClientHttpConnector(HttpClient.from(tcpClient)))
-                .baseUrl("http://localhost:8083/transaction")
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .defaultUriVariables(Collections.singletonMap("url", "http://localhost:8083/transaction"))
-                .build();
-        List<Object> block = client.method(HttpMethod.GET).uri(uriBuilder -> uriBuilder
-                .path("/transactions")
-                .queryParam("ibanAccount", accountIban)
-                .build())
-                .retrieve().bodyToFlux(Object.class).collectList().block();
-        List<T> name = (List<T>) block;
-        return name;
-    }
-
-    private String getProductName(long id) {
-        WebClient client = webClientBuilder.clientConnector(new ReactorClientHttpConnector(HttpClient.from(tcpClient)))
-                .baseUrl("http://localhost:8082/product")
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .defaultUriVariables(Collections.singletonMap("url", "http://localhost:8082/product"))
-                .build();
-        JsonNode block = client.method(HttpMethod.GET).uri("/" + id)
-                .retrieve().bodyToMono(JsonNode.class).block();
-        String name = block.get("name").asText();
-        return name;
-    }
 
     @GetMapping()
     public List<CustomerEntity> findAll() {
@@ -112,8 +77,17 @@ public class CustomerRestController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> put(@PathVariable Long id, @RequestBody Object input) {
-        return null;
+    public ResponseEntity<?> put(@PathVariable long id, @RequestBody CustomerEntity input) {
+        CustomerEntity find = customerRepository.findById(id).get();
+        if (find != null) {
+            find.setCode(input.getCode());
+            find.setName(input.getName());
+            find.setIban(input.getIban());
+            find.setPhone(input.getPhone());
+            find.setSurname(input.getSurname());
+        }
+        CustomerEntity save = customerRepository.save(find);
+        return ResponseEntity.ok(save);
     }
 
     @PostMapping
@@ -124,8 +98,69 @@ public class CustomerRestController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
-        return null;
+    public ResponseEntity<?> delete(@PathVariable long id) {
+        Optional<CustomerEntity> findById = customerRepository.findById(id);
+        if (findById.get() != null) {
+            customerRepository.delete(findById.get());
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/full")
+    public CustomerEntity getByCode(@RequestParam String code) {
+        CustomerEntity customer = customerRepository.findByCode(code);
+//        System.out.println();
+        List<CustomerProductEntity> products = customer.getProducts();
+        products.forEach(x -> {
+            String productName = getProductName(x.getProductId());
+            x.setProductName(productName);
+        });
+
+        //find all transactions that belong this account number
+        List<?> transactions = getTransactions(customer.getIban());
+        customer.setTransactions(transactions);
+        return customer;
+
+    }
+
+//    @GetMapping("/hello")
+//    public String sayHello() {
+//        return "Hello your role is: " + role;
+//    }
+
+    private String getProductName(long id) {
+        WebClient build = webClientBuilder.clientConnector(new ReactorClientHttpConnector(HttpClient.from(client)))
+                .baseUrl("http://businessdomain-product/product")
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .defaultUriVariables(Collections.singletonMap("url", "http://businessdomain-product/product"))
+                .build();
+
+        JsonNode block = build.method(HttpMethod.GET).uri("/" + id)
+                .retrieve().bodyToMono(JsonNode.class).block();
+        String name = block.get("name").asText();
+        return name;
+    }
+
+    /**
+     * Call Transaction Microservice and Find all transaction that belong to the
+     * account give
+     *
+     * @param iban account number of the customer
+     * @return All transaction that belong this account
+     */
+    private List<?> getTransactions(String iban) {
+        WebClient build = webClientBuilder.clientConnector(new ReactorClientHttpConnector(HttpClient.from(client)))
+                .baseUrl("http://businessdomain-transaction/transaction")
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .build();
+
+        List<?> transactions = build.method(HttpMethod.GET).uri(uriBuilder -> uriBuilder
+                .path("/customer/transactions")
+                .queryParam("ibanAccount", iban)
+                .build())
+                .retrieve().bodyToFlux(Object.class).collectList().block();
+
+        return transactions;
     }
 
 }
